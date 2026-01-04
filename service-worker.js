@@ -1,4 +1,4 @@
-const CACHE_NAME = "sumoku-cache-v1";
+const CACHE_NAME = "sumoku-cache-v5";
 const ASSETS = [
   "./",
   "./izy-sumoku_7x7-v3.html",
@@ -34,3 +34,4 @@ self.addEventListener("fetch", event => {
     })
   );
 });
+
