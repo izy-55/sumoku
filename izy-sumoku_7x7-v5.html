@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Sumoku 7x7</title>
+
+    <!-- חשוב למובייל -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- PWA manifest + צבע למעלה בדפדפן -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#ffffff">
+
+    <style>
+        :root {
+            /* ערכי ברירת מחדל – ידרסו ע"י JS לפי רוחב המסך */
+            --cell-size: 40px;
+            --cell-font-size: 20px;
+            --sum-font-size: 20px;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        h1 {
+            margin-bottom: 10px;
+            font-size: 32px;
+        }
+
+        /* --- הלוח --- */
+        #game-container {
+            display: inline-block;
+            margin-top: 10px;
+        }
+
+        table {
+            border-collapse: collapse;
+            margin: 0 auto;
+            border: 3px solid #444;
+            border-radius: 4px;
+        }
+
+        td {
+            border: 1px solid #aaa;
+        }
+			/* הפרדה עבה בין לוח המשחק לסיכומים */
+				table tr:last-child td {
+				border-top: 3px solid #444;   /* מעל שורת הסיכומים התחתונה */
+		  }
+
+				table tr td:last-child {
+				border-left: 3px solid #444;  /* משמאל לטור הסיכומים הימני */
+			}
+
+
+        /* תא עם מספר – ברירת מחדל */
+        .cell {
+            width: var(--cell-size);
+            height: var(--cell-size);
+            text-align: center;
+            vertical-align: middle;
+            cursor: pointer;
+            font-size: var(--cell-font-size);
+            background-color: #ffffff;
+            user-select: none;
+        }
+
+        /* אפור – לא משתתף בסכום */
+        .cell.excluded {
+            background-color: #d0d0d0;
+        }
+
+        /* ירוק – משתתף בסכום */
+        .cell.selected {
+            background-color: #adff4f;
+        }
+
+        /* סכומי שורות/עמודות */
+        .sum {
+            width: var(--cell-size);
+            height: var(--cell-size);
+            text-align: center;
+            vertical-align: middle;
+            font-weight: bold;
+            font-size: var(--sum-font-size);
+            background-color: #f5f5f5;
+            color: #333;
+        }
+
+        .sum.ok {
+            background-color: #ffe97f;
+            color: #000;
+        }
+
+        .sum.partial {
+            background-color: #ffc58a;
+            color: #000;
+        }
+
+        .sum.bad {
+            background-color: #f5f5f5;
+            color: #333;
+        }
+
+        /* טיימר */
+        #timer {
+            margin-top: 12px;
+            font-size: 22px;
+            font-family: monospace;
+        }
+
+        /* כפתורי רמת קושי */
+        #difficulty-controls {
+            margin-top: 10px;
+            margin-bottom: 4px;
+        }
+
+        .difficulty-btn {
+            padding: 4px 10px;
+            margin: 0 4px;
+            font-size: 13px;
+            cursor: pointer;
+            border-radius: 4px;
+            border: 1px solid #777;
+            background-color: #eee;
+        }
+
+        .difficulty-btn.active {
+            background-color: #4b8df8;
+            color: white;
+            border-color: #2f6ad8;
+        }
+
+        /* כפתורי שליטה */
+        #controls {
+            margin-top: 10px;
+        }
+
+        button {
+            padding: 7px 18px;
+            margin: 0 7px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        /* סטטוס סיום */
+        #status {
+            margin-top: 12px;
+            font-weight: bold;
+            font-size: 20px;
+        }
+
+        /* טיפונת כיווץ במסכים מאוד צרים */
+        @media (max-width: 400px) {
+            h1 {
+                font-size: 26px;
+                margin-bottom: 6px;
+            }
+            #timer {
+                font-size: 20px;
+            }
+            #status {
+                font-size: 18px;
+            }
+            .difficulty-btn {
+                font-size: 12px;
+                padding: 4px 8px;
+                margin: 0 2px;
+            }
+            button {
+                font-size: 14px;
+                padding: 6px 12px;
+                margin: 4px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<h1>Sumoku 7x7</h1>
+
+<div id="game-container"></div>
+
+<div id="timer">00:00</div>
+
+<div id="difficulty-controls">
+    Difficulty:
+    <button id="difficultyLow"  class="difficulty-btn active">LOW</button>
+    <button id="difficultyMid"  class="difficulty-btn">MID</button>
+    <button id="difficultyHigh" class="difficulty-btn">HIGH</button>
+</div>
+
+<div id="controls">
+    <button id="resetBtn">RESET</button>
+    <button id="newBoardBtn">NEW BOARD</button>
+</div>
+
+<div id="status"></div>
+
+<script>
+    const SIZE = 7;
+
+    let gridValues = [];
+    let solutionMask = [];
+    let rowTargets = [];
+    let colTargets = [];
+    let currentDifficulty = "low";
+
+    let elapsedSeconds = 0;
+    let timerInterval = null;
+
+    /* === התאמת גודל תאים לפי רוחב המסך === */
+    function applyResponsiveCellSize() {
+        // מספר העמודות בטבלה = 7 תאים + תא סכום = 8
+        const columns = SIZE + 1;
+
+        // משאירים קצת שוליים מסביב
+        const maxBoardWidth = Math.min(window.innerWidth - 40, 520);
+        const cellSize = Math.max(32, Math.floor(maxBoardWidth / columns));
+
+        // גודל פונט בהתאם לגודל התא
+        const cellFont = Math.max(16, Math.floor(cellSize * 0.55));
+        const sumFont  = Math.max(16, Math.floor(cellSize * 0.50));
+
+        document.documentElement.style.setProperty("--cell-size", cellSize + "px");
+        document.documentElement.style.setProperty("--cell-font-size", cellFont + "px");
+        document.documentElement.style.setProperty("--sum-font-size", sumFont + "px");
+    }
+
+    /* === טיימר === */
+    function startTimer() {
+        stopTimer();
+        elapsedSeconds = 0;
+        updateTimerDisplay();
+        timerInterval = setInterval(() => {
+            elapsedSeconds++;
+            updateTimerDisplay();
+        }, 1000);
+    }
+
+    function stopTimer() {
+        if (timerInterval) {
+            clearInterval(timerInterval);
+            timerInterval = null;
+        }
+    }
+
+    function updateTimerDisplay() {
+        const mm = Math.floor(elapsedSeconds / 60).toString().padStart(2, "0");
+        const ss = (elapsedSeconds % 60).toString().padStart(2, "0");
+        document.getElementById("timer").textContent = `${mm}:${ss}`;
+    }
+
+    /* === בניית טבלת ה-HTML === */
+    function buildHtmlTable() {
+        const container = document.getElementById("game-container");
+        container.innerHTML = "";
+
+        const table = document.createElement("table");
+
+        for (let r = 0; r < SIZE; r++) {
+            const tr = document.createElement("tr");
+
+            for (let c = 0; c < SIZE; c++) {
+                const td = document.createElement("td");
+                td.className = "cell";
+                td.dataset.row = r;
+                td.dataset.col = c;
+                td.dataset.state = "0";
+                td.addEventListener("click", onCellClick);
+                tr.appendChild(td);
+            }
+
+            const sumTd = document.createElement("td");
+            sumTd.className = "sum row-sum";
+            sumTd.dataset.row = r;
+            tr.appendChild(sumTd);
+
+            table.appendChild(tr);
+        }
+
+        const lastRow = document.createElement("tr");
+        for (let c = 0; c < SIZE; c++) {
+            const sumTd = document.createElement("td");
+            sumTd.className = "sum col-sum";
+            sumTd.dataset.col = c;
+            lastRow.appendChild(sumTd);
+        }
+
+        const corner = document.createElement("td");
+        corner.className = "sum";
+        lastRow.appendChild(corner);
+
+        table.appendChild(lastRow);
+        container.appendChild(table);
+    }
+
+    /* === רמת קושי – כמה תאים "פתרון" בכל שורה === */
+    function getHowManySelectedPerRow() {
+        let howMany;
+        if (currentDifficulty === "low") {
+            howMany = 1 + Math.floor(Math.random() * 3); // 1..3
+        } else if (currentDifficulty === "mid") {
+            howMany = 3 + Math.floor(Math.random() * 3); // 3..5
+        } else { // high
+            howMany = 4 + Math.floor(Math.random() * 3); // 4..6
+        }
+        if (howMany > SIZE) howMany = SIZE;
+        return howMany;
+    }
+
+    function getRandomCellValue() {
+        if (currentDifficulty === "low" || currentDifficulty === "mid") {
+            return 1 + Math.floor(Math.random() * 9);
+        } else {
+            const r = Math.random();
+            if (r < 0.2) {
+                return 1 + Math.floor(Math.random() * 3);
+            } else {
+                return 4 + Math.floor(Math.random() * 6);
+            }
+        }
+    }
+
+    /* === יצירת לוח חדש === */
+    function generateNewPuzzle() {
+        gridValues = [];
+        solutionMask = [];
+        rowTargets = new Array(SIZE).fill(0);
+        colTargets = new Array(SIZE).fill(0);
+
+        for (let r = 0; r < SIZE; r++) {
+            gridValues[r] = [];
+            solutionMask[r] = [];
+            for (let c = 0; c < SIZE; c++) {
+                gridValues[r][c] = 0;
+                solutionMask[r][c] = false;
+            }
+        }
+
+        // בחירת תאי פתרון לכל שורה
+        for (let r = 0; r < SIZE; r++) {
+            const howMany = getHowManySelectedPerRow();
+            const picked = new Set();
+            while (picked.size < howMany) {
+                picked.add(Math.floor(Math.random() * SIZE));
+            }
+            picked.forEach(c => solutionMask[r][c] = true);
+        }
+
+        // לוודא שלכל עמודה יש לפחות תא פתרון
+        for (let c = 0; c < SIZE; c++) {
+            let exists = false;
+            for (let r = 0; r < SIZE; r++) {
+                if (solutionMask[r][c]) {
+                    exists = true;
+                    break;
+                }
+            }
+            if (!exists) {
+                const rr = Math.floor(Math.random() * SIZE);
+                solutionMask[rr][c] = true;
+            }
+        }
+
+        // מילוי מספרים
+        for (let r = 0; r < SIZE; r++) {
+            for (let c = 0; c < SIZE; c++) {
+                gridValues[r][c] = getRandomCellValue();
+            }
+        }
+
+        // חישוב סכומי יעד
+        for (let r = 0; r < SIZE; r++) {
+            for (let c = 0; c < SIZE; c++) {
+                if (solutionMask[r][c]) {
+                    rowTargets[r] += gridValues[r][c];
+                    colTargets[c] += gridValues[r][c];
+                }
+            }
+        }
+
+        // בדיקה שאין שורות/עמודות עם 0
+        for (let r = 0; r < SIZE; r++) {
+            if (rowTargets[r] === 0) return generateNewPuzzle();
+        }
+        for (let c = 0; c < SIZE; c++) {
+            if (colTargets[c] === 0) return generateNewPuzzle();
+        }
+
+        refreshBoardDisplay();
+        resetBoardStates();
+        updateSumsAndStatus();
+        startTimer();
+    }
+
+    function refreshBoardDisplay() {
+        document.querySelectorAll(".cell").forEach(cell => {
+            const r = cell.dataset.row;
+            const c = cell.dataset.col;
+            cell.textContent = gridValues[r][c];
+        });
+
+        document.querySelectorAll(".row-sum").forEach(td => {
+            td.textContent = rowTargets[td.dataset.row];
+            td.classList.remove("ok", "bad", "partial");
+        });
+
+        document.querySelectorAll(".col-sum").forEach(td => {
+            td.textContent = colTargets[td.dataset.col];
+            td.classList.remove("ok", "bad", "partial");
+        });
+    }
+
+    function resetBoardStates() {
+        document.querySelectorAll(".cell").forEach(cell => {
+            cell.dataset.state = "0";
+            cell.classList.remove("selected", "excluded");
+        });
+
+        const tbl = document.querySelector("table");
+        if (tbl) tbl.style.borderColor = "#444";
+    }
+
+    /* === לחיצה על תא: לבן → אפור → ירוק → לבן === */
+    function onCellClick(event) {
+        const cell = event.currentTarget;
+        let state = Number(cell.dataset.state);
+        state = (state + 1) % 3;
+        cell.dataset.state = state;
+
+        cell.classList.remove("selected", "excluded");
+        if (state === 1) {
+            cell.classList.add("excluded");
+        } else if (state === 2) {
+            cell.classList.add("selected");
+        }
+
+        updateSumsAndStatus();
+    }
+
+    /* === חישוב סטטוס שורות/עמודות וסיום === */
+    function updateSumsAndStatus() {
+        const sumGreenRow = new Array(SIZE).fill(0);
+        const sumGreenCol = new Array(SIZE).fill(0);
+        const sumWhiteRow = new Array(SIZE).fill(0);
+        const sumWhiteCol = new Array(SIZE).fill(0);
+        const countWhiteRow = new Array(SIZE).fill(0);
+        const countWhiteCol = new Array(SIZE).fill(0);
+
+        document.querySelectorAll(".cell").forEach(cell => {
+            const r = Number(cell.dataset.row);
+            const c = Number(cell.dataset.col);
+            const val = gridValues[r][c];
+            const state = cell.dataset.state;
+
+            if (state === "2") {
+                sumGreenRow[r] += val;
+                sumGreenCol[c] += val;
+            } else if (state === "0") {
+                sumWhiteRow[r] += val;
+                sumWhiteCol[c] += val;
+                countWhiteRow[r]++;
+                countWhiteCol[c]++;
+            }
+        });
+
+        const rowSolved = new Array(SIZE).fill(false);
+        const colSolved = new Array(SIZE).fill(false);
+
+        document.querySelectorAll(".row-sum").forEach(td => {
+            const r = Number(td.dataset.row);
+            const target = rowTargets[r];
+            const g = sumGreenRow[r];
+            const w = sumWhiteRow[r];
+            const whiteCount = countWhiteRow[r];
+
+            td.classList.remove("ok", "bad", "partial");
+
+            if (g === target && whiteCount === 0) {
+                td.classList.add("ok");
+                rowSolved[r] = true;
+            } else if (g < target && g + w === target && whiteCount > 0) {
+                td.classList.add("partial");
+            } else {
+                td.classList.add("bad");
+            }
+        });
+
+        document.querySelectorAll(".col-sum").forEach(td => {
+            const c = Number(td.dataset.col);
+            const target = colTargets[c];
+            const g = sumGreenCol[c];
+            const w = sumWhiteCol[c];
+            const whiteCount = countWhiteCol[c];
+
+            td.classList.remove("ok", "bad", "partial");
+
+            if (g === target && whiteCount === 0) {
+                td.classList.add("ok");
+                colSolved[c] = true;
+            } else if (g < target && g + w === target && whiteCount > 0) {
+                td.classList.add("partial");
+            } else {
+                td.classList.add("bad");
+            }
+        });
+
+        let solved = true;
+        for (let r = 0; r < SIZE; r++) if (!rowSolved[r]) solved = false;
+        for (let c = 0; c < SIZE; c++) if (!colSolved[c]) solved = false;
+
+        const status = document.getElementById("status");
+        const tbl = document.querySelector("table");
+
+        if (solved) {
+            stopTimer();
+            const mm = Math.floor(elapsedSeconds / 60).toString().padStart(2, "0");
+            const ss = (elapsedSeconds % 60).toString().padStart(2, "0");
+            status.textContent = `Solved in ${mm}:${ss} ✅`;
+            if (tbl) tbl.style.borderColor = "#3dbc40";
+        } else {
+            status.textContent = "";
+            if (tbl) tbl.style.borderColor = "#444";
+        }
+    }
+
+    function resetBoard() {
+        resetBoardStates();
+        updateSumsAndStatus();
+        startTimer();
+    }
+
+    function setDifficulty(mode) {
+        currentDifficulty = mode;
+
+        const lowBtn  = document.getElementById("difficultyLow");
+        const midBtn  = document.getElementById("difficultyMid");
+        const highBtn = document.getElementById("difficultyHigh");
+
+        lowBtn.classList.toggle("active", mode === "low");
+        midBtn.classList.toggle("active", mode === "mid");
+        highBtn.classList.toggle("active", mode === "high");
+
+        generateNewPuzzle();
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        applyResponsiveCellSize();
+        buildHtmlTable();
+        generateNewPuzzle();
+
+        document.getElementById("resetBtn").addEventListener("click", resetBoard);
+        document.getElementById("newBoardBtn").addEventListener("click", generateNewPuzzle);
+
+        document.getElementById("difficultyLow").addEventListener("click", () => setDifficulty("low"));
+        document.getElementById("difficultyMid").addEventListener("click", () => setDifficulty("mid"));
+        document.getElementById("difficultyHigh").addEventListener("click", () => setDifficulty("high"));
+    });
+
+    // התאמה מחדש כשמסובבים/משנים גודל מסך
+    window.addEventListener("resize", applyResponsiveCellSize);
+
+    // הרשמת Service Worker עבור PWA
+    if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+            navigator.serviceWorker.register("./service-worker.js")
+                .catch(err => console.log("Service worker registration failed:", err));
+        });
+    }
+</script>
+
+</body>
+</html>
