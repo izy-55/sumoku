@@ -7,33 +7,35 @@
     <!-- חשוב למובייל -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <!-- PWA manifest (ללא service worker כרגע) -->
+    <!-- PWA manifest + צבע למעלה בדפדפן -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#ffffff">
 
     <style>
+        :root {
+            /* ערכי ברירת מחדל – ידרסו ע"י JS לפי רוחב המסך */
+            --cell-size: 40px;
+            --cell-font-size: 20px;
+            --sum-font-size: 20px;
+        }
+
         body {
             font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 15px;
-            background: #f7f7f7;
             text-align: center;
+            margin-top: 30px;
         }
 
         h1 {
-            margin: 10px 0 15px;
+            margin-bottom: 10px;
+            font-size: 32px;
         }
 
-        /* 컨테이너 */
+        /* --- הלוח --- */
         #game-container {
             display: inline-block;
-            background: #fff;
-            padding: 14px 14px 10px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            margin-top: 10px;
         }
 
-        /* לוח המשחק */
         table {
             border-collapse: collapse;
             margin: 0 auto;
@@ -42,393 +44,534 @@
         }
 
         td {
-            width: var(--cell-size, 40px);
-            height: var(--cell-size, 40px);
             border: 1px solid #aaa;
+        }
+
+        /* הפרדה עבה בין לוח המשחק לסיכומים */
+        table tr:last-child td {
+            border-top: 2px solid #444;   /* מעל שורת הסיכומים התחתונה */
+        }
+
+        table tr td:last-child {
+            border-left: 2px solid #444;  /* משמאל לטור הסיכומים הימני */
+        }
+
+        /* תא עם מספר – ברירת מחדל */
+        .cell {
+            width: var(--cell-size);
+            height: var(--cell-size);
             text-align: center;
             vertical-align: middle;
-            font-size: var(--cell-font-size, 20px);
-            padding: 0;
-            background: #fff;
+            cursor: pointer;
+            font-size: var(--cell-font-size);
+            background-color: #ffffff;
+            user-select: none;
         }
 
-        /* תאי סכומים */
-        .sum-cell {
-            background: #efefef;
-            font-weight: bold;
+        /* אפור – לא משתתף בסכום */
+        .cell.excluded {
+            background-color: #d0d0d0;
         }
 
-        /* תאים קבועים (נתונים מראש) */
-        .fixed {
-            background: #e9e9e9;
-            font-weight: bold;
+        /* ירוק – משתתף בסכום */
+        .cell.selected {
+            background-color: #adff4f;
         }
 
-        /* אינפוט */
-        input.cell-input {
-            width: 100%;
-            height: 100%;
-            border: none;
-            outline: none;
+        /* סכומי שורות/עמודות */
+        .sum {
+            width: var(--cell-size);
+            height: var(--cell-size);
             text-align: center;
-            font-size: inherit;
-            background: transparent;
+            vertical-align: middle;
+            font-weight: bold;
+            font-size: var(--sum-font-size);
+            background-color: #f5f5f5;
+            color: #333;
         }
 
-        /* פסי עזר/ממשק */
-        .toolbar {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-            align-items: center;
-            margin: 10px 0 12px;
-            flex-wrap: wrap;
+        .sum.ok {
+            background-color: #ffe97f;
+            color: #000;
         }
 
-        .toolbar select, .toolbar button {
+        .sum.partial {
+            background-color: #ffc58a;
+            color: #000;
+        }
+
+        .sum.bad {
+            background-color: #f5f5f5;
+            color: #333;
+        }
+
+        /* טיימר */
+        #timer {
+            margin-top: 12px;
+            font-size: 22px;
+            font-family: monospace;
+        }
+
+        /* כפתורי רמת קושי */
+        #difficulty-controls {
+            margin-top: 10px;
+            margin-bottom: 4px;
+        }
+
+        .difficulty-btn {
+            padding: 4px 10px;
+            margin: 0 4px;
+            font-size: 13px;
+            cursor: pointer;
+            border-radius: 4px;
+            border: 1px solid #777;
+            background-color: #eee;
+        }
+
+        .difficulty-btn.active {
+            background-color: #4b8df8;
+            color: white;
+            border-color: #2f6ad8;
+        }
+
+        /* כפתורי שליטה */
+        #controls {
+            margin-top: 10px;
+        }
+
+        button {
+            padding: 7px 18px;
+            margin: 0 7px;
             font-size: 16px;
-            padding: 8px 12px;
-            border: 1px solid #cfcfcf;
-            border-radius: 10px;
-            background: #fff;
             cursor: pointer;
         }
 
-        .timer {
-            display: inline-block;
-            min-width: 90px;
-            padding: 8px 12px;
-            border: 1px solid #cfcfcf;
-            border-radius: 10px;
-            background: #fff;
+        /* סטטוס סיום */
+        #status {
+            margin-top: 12px;
             font-weight: bold;
+            font-size: 20px;
         }
 
-        .status {
-            margin-top: 10px;
-            font-size: 14px;
-            opacity: 0.85;
-        }
-
-        /* קווים עבים סביב מסגרת החיצונית + אזור סכומים */
-        table tr:last-child td {
-            border-top: 3px solid #444;   /* מעל שורת הסיכומים התחתונה */
-        }
-        table tr td:last-child {
-            border-left: 3px solid #444;  /* משמאל לטור הסיכומים הימני */
-        }
-
-        /* תגית גרסה קטנה */
-        .ver {
-            position: fixed;
-            top: 8px;
-            left: 8px;
-            background: #fff;
-            border: 1px solid #ccc;
-            padding: 2px 6px;
-            font-size: 12px;
-            border-radius: 4px;
-            opacity: 0.9;
-            z-index: 99999;
-        }
-
-        @media (max-width: 520px) {
-            body { padding: 10px; }
-            .toolbar select, .toolbar button { font-size: 14px; padding: 8px 10px; }
-            .timer { font-size: 14px; }
+        /* טיפונת כיווץ במסכים מאוד צרים */
+        @media (max-width: 400px) {
+            h1 {
+                font-size: 26px;
+                margin-bottom: 6px;
+            }
+            #timer {
+                font-size: 20px;
+            }
+            #status {
+                font-size: 18px;
+            }
+            .difficulty-btn {
+                font-size: 12px;
+                padding: 4px 8px;
+                margin: 0 2px;
+            }
+            button {
+                font-size: 14px;
+                padding: 6px 12px;
+                margin: 4px;
+            }
         }
     </style>
 </head>
 
 <body>
-<div class="ver">INDEX-V5 (real) • no SW</div>
 
 <h1>Sumoku 7x7</h1>
 
 <div id="game-container"></div>
 
+<div id="timer">00:00</div>
+
+<div id="difficulty-controls">
+    Difficulty:
+    <button id="difficultyLow"  class="difficulty-btn active">LOW</button>
+    <button id="difficultyMid"  class="difficulty-btn">MID</button>
+    <button id="difficultyHigh" class="difficulty-btn">HIGH</button>
+</div>
+
+<div id="controls">
+    <button id="resetBtn">RESET</button>
+    <button id="newBoardBtn">NEW BOARD</button>
+</div>
+
+<div id="status"></div>
+
 <script>
-    // === V5 ORIGINAL LOGIC (as uploaded) ===
     const SIZE = 7;
 
-    // Responsive cell size (as in your V5)
-    function applyResponsiveCellSize() {
-        const w = Math.min(window.innerWidth, 900);
-        const cellSize = Math.max(34, Math.floor((w - 60) / (SIZE + 1)));
-        document.documentElement.style.setProperty("--cell-size", cellSize + "px");
-        const fontSize = Math.max(16, Math.floor(cellSize * 0.55));
-        document.documentElement.style.setProperty("--cell-font-size", fontSize + "px");
-    }
-    window.addEventListener("resize", applyResponsiveCellSize);
-    applyResponsiveCellSize();
+    let gridValues = [];
+    let solutionMask = [];
+    let rowTargets = [];
+    let colTargets = [];
+    let currentDifficulty = "low";
 
-    // --- UI build ---
-    const container = document.getElementById("game-container");
-
-    const toolbar = document.createElement("div");
-    toolbar.className = "toolbar";
-
-    const diffLabel = document.createElement("span");
-    diffLabel.textContent = "Difficulty:";
-    toolbar.appendChild(diffLabel);
-
-    const diffSelect = document.createElement("select");
-    diffSelect.id = "difficulty";
-    ["LOW","MID","HIGH"].forEach(v => {
-        const opt = document.createElement("option");
-        opt.value = v;
-        opt.textContent = v;
-        diffSelect.appendChild(opt);
-    });
-    diffSelect.value = "MID";
-    toolbar.appendChild(diffSelect);
-
-    const btnNew = document.createElement("button");
-    btnNew.textContent = "New";
-    toolbar.appendChild(btnNew);
-
-    const btnClear = document.createElement("button");
-    btnClear.textContent = "Clear";
-    toolbar.appendChild(btnClear);
-
-    const timerBox = document.createElement("div");
-    timerBox.className = "timer";
-    timerBox.id = "timer";
-    timerBox.textContent = "00:00";
-    toolbar.appendChild(timerBox);
-
-    container.appendChild(toolbar);
-
-    const boardHolder = document.createElement("div");
-    boardHolder.id = "board-holder";
-    container.appendChild(boardHolder);
-
-    const status = document.createElement("div");
-    status.className = "status";
-    status.id = "status";
-    status.textContent = "V5 restored: no redirects, no service worker.";
-    container.appendChild(status);
-
-    // --- Timer ---
+    let elapsedSeconds = 0;
     let timerInterval = null;
-    let startTime = null;
 
-    function pad2(n){ return String(n).padStart(2,"0"); }
+    /* === התאמת גודל תאים לפי רוחב המסך === */
+    function applyResponsiveCellSize() {
+        const columns = SIZE + 1;
+        const maxBoardWidth = Math.min(window.innerWidth - 40, 520);
+        const cellSize = Math.max(32, Math.floor(maxBoardWidth / columns));
 
-    function startTimer(){
-        stopTimer();
-        startTime = Date.now();
-        timerInterval = setInterval(() => {
-            const sec = Math.floor((Date.now() - startTime)/1000);
-            const mm = Math.floor(sec/60);
-            const ss = sec%60;
-            timerBox.textContent = `${pad2(mm)}:${pad2(ss)}`;
-        }, 250);
+        const cellFont = Math.max(16, Math.floor(cellSize * 0.55));
+        const sumFont  = Math.max(16, Math.floor(cellSize * 0.50));
+
+        document.documentElement.style.setProperty("--cell-size", cellSize + "px");
+        document.documentElement.style.setProperty("--cell-font-size", cellFont + "px");
+        document.documentElement.style.setProperty("--sum-font-size", sumFont + "px");
     }
 
-    function stopTimer(){
-        if(timerInterval){
+    /* === טיימר === */
+    function startTimer() {
+        stopTimer();
+        elapsedSeconds = 0;
+        updateTimerDisplay();
+        timerInterval = setInterval(() => {
+            elapsedSeconds++;
+            updateTimerDisplay();
+        }, 1000);
+    }
+
+    function stopTimer() {
+        if (timerInterval) {
             clearInterval(timerInterval);
             timerInterval = null;
         }
     }
 
-    function resetTimer(){
-        stopTimer();
-        timerBox.textContent = "00:00";
+    function updateTimerDisplay() {
+        const mm = Math.floor(elapsedSeconds / 60).toString().padStart(2, "0");
+        const ss = (elapsedSeconds % 60).toString().padStart(2, "0");
+        document.getElementById("timer").textContent = `${mm}:${ss}`;
     }
 
-    // --- Game state ---
-    let solution = [];
-    let puzzle = [];
+    /* === בניית טבלת ה-HTML === */
+    function buildHtmlTable() {
+        const container = document.getElementById("game-container");
+        container.innerHTML = "";
 
-    function createEmptyGrid(n){
-        return Array.from({length:n}, () => Array.from({length:n}, () => 0));
-    }
-
-    function cloneGrid(g){
-        return g.map(row => row.slice());
-    }
-
-    function shuffleArray(a){
-        for(let i=a.length-1;i>0;i--){
-            const j = Math.floor(Math.random()*(i+1));
-            [a[i],a[j]] = [a[j],a[i]];
-        }
-    }
-
-    // This is your V5-style stable generator (cyclic + shuffle)
-    function generateSolution(){
-        const base = [1,2,3,4,5,6,7];
-        const grid = createEmptyGrid(SIZE);
-        for(let r=0;r<SIZE;r++){
-            for(let c=0;c<SIZE;c++){
-                grid[r][c] = base[(c+r)%SIZE];
-            }
-        }
-        // shuffle rows
-        shuffleArray(grid);
-        // shuffle cols
-        for(let i=SIZE-1;i>0;i--){
-            const j = Math.floor(Math.random()*(i+1));
-            for(let r=0;r<SIZE;r++){
-                [grid[r][i], grid[r][j]] = [grid[r][j], grid[r][i]];
-            }
-        }
-        return grid;
-    }
-
-    function makePuzzleFromSolution(sol, difficulty){
-        const g = cloneGrid(sol);
-        let removeRatio = 0.35;
-        if(difficulty === "MID") removeRatio = 0.50;
-        if(difficulty === "HIGH") removeRatio = 0.65;
-
-        const total = SIZE*SIZE;
-        const toRemove = Math.floor(total*removeRatio);
-
-        let removed = 0;
-        while(removed < toRemove){
-            const r = Math.floor(Math.random()*SIZE);
-            const c = Math.floor(Math.random()*SIZE);
-            if(g[r][c] !== 0){
-                g[r][c] = 0;
-                removed++;
-            }
-        }
-        return g;
-    }
-
-    function rowSum(grid, r){
-        let s=0;
-        for(let c=0;c<SIZE;c++) s += grid[r][c];
-        return s;
-    }
-
-    function colSum(grid, c){
-        let s=0;
-        for(let r=0;r<SIZE;r++) s += grid[r][c];
-        return s;
-    }
-
-    function renderBoard(){
-        boardHolder.innerHTML = "";
         const table = document.createElement("table");
 
-        for(let r=0;r<=SIZE;r++){
+        for (let r = 0; r < SIZE; r++) {
             const tr = document.createElement("tr");
-            for(let c=0;c<=SIZE;c++){
+
+            for (let c = 0; c < SIZE; c++) {
                 const td = document.createElement("td");
-
-                const isSumRow = (r === SIZE);
-                const isSumCol = (c === SIZE);
-
-                if(isSumRow && isSumCol){
-                    td.className = "sum-cell fixed";
-                    td.textContent = "";
-                } else if(isSumRow){
-                    td.className = "sum-cell";
-                    td.textContent = String(colSum(solution, c));
-                } else if(isSumCol){
-                    td.className = "sum-cell";
-                    td.textContent = String(rowSum(solution, r));
-                } else {
-                    const v = puzzle[r][c];
-                    if(v === 0){
-                        const inp = document.createElement("input");
-                        inp.className = "cell-input";
-                        inp.inputMode = "numeric";
-                        inp.maxLength = 1;
-                        inp.dataset.r = String(r);
-                        inp.dataset.c = String(c);
-                        inp.addEventListener("input", onCellInput);
-                        td.appendChild(inp);
-                    } else {
-                        td.className = "fixed";
-                        td.textContent = String(v);
-                    }
-                }
-
+                td.className = "cell";
+                td.dataset.row = r;
+                td.dataset.col = c;
+                td.dataset.state = "0";
+                td.addEventListener("click", onCellClick);
                 tr.appendChild(td);
             }
+
+            const sumTd = document.createElement("td");
+            sumTd.className = "sum row-sum";
+            sumTd.dataset.row = r;
+            tr.appendChild(sumTd);
+
             table.appendChild(tr);
         }
 
-        boardHolder.appendChild(table);
-    }
-
-    function onCellInput(e){
-        const inp = e.target;
-        let v = inp.value.replace(/\D/g,"");
-        if(v.length>1) v=v.slice(0,1);
-        if(v !== ""){
-            const n = Number(v);
-            if(n < 1 || n > 7) v = "";
+        const lastRow = document.createElement("tr");
+        for (let c = 0; c < SIZE; c++) {
+            const sumTd = document.createElement("td");
+            sumTd.className = "sum col-sum";
+            sumTd.dataset.col = c;
+            lastRow.appendChild(sumTd);
         }
-        inp.value = v;
-        checkWin();
+
+        const corner = document.createElement("td");
+        corner.className = "sum";
+        lastRow.appendChild(corner);
+
+        table.appendChild(lastRow);
+        container.appendChild(table);
     }
 
-    function currentGridFromUI(){
-        const g = createEmptyGrid(SIZE);
-        const table = boardHolder.querySelector("table");
-        if(!table) return g;
+    /* === רמת קושי – כמה תאים "פתרון" בכל שורה === */
+    function getHowManySelectedPerRow() {
+        let howMany;
+        if (currentDifficulty === "low") {
+            howMany = 1 + Math.floor(Math.random() * 3); // 1..3
+        } else if (currentDifficulty === "mid") {
+            howMany = 3 + Math.floor(Math.random() * 3); // 3..5
+        } else { // high
+            howMany = 4 + Math.floor(Math.random() * 3); // 4..6
+        }
+        if (howMany > SIZE) howMany = SIZE;
+        return howMany;
+    }
 
-        for(let r=0;r<SIZE;r++){
-            for(let c=0;c<SIZE;c++){
-                const td = table.rows[r].cells[c];
-                const inp = td.querySelector("input");
-                if(inp){
-                    g[r][c] = inp.value ? Number(inp.value) : 0;
-                } else {
-                    const t = td.textContent.trim();
-                    g[r][c] = t ? Number(t) : 0;
+    function getRandomCellValue() {
+        if (currentDifficulty === "low" || currentDifficulty === "mid") {
+            return 1 + Math.floor(Math.random() * 9);
+        } else {
+            const r = Math.random();
+            if (r < 0.2) {
+                return 1 + Math.floor(Math.random() * 3);
+            } else {
+                return 4 + Math.floor(Math.random() * 6);
+            }
+        }
+    }
+
+    /* === יצירת לוח חדש === */
+    function generateNewPuzzle() {
+        gridValues = [];
+        solutionMask = [];
+        rowTargets = new Array(SIZE).fill(0);
+        colTargets = new Array(SIZE).fill(0);
+
+        for (let r = 0; r < SIZE; r++) {
+            gridValues[r] = [];
+            solutionMask[r] = [];
+            for (let c = 0; c < SIZE; c++) {
+                gridValues[r][c] = 0;
+                solutionMask[r][c] = false;
+            }
+        }
+
+        // בחירת תאי פתרון לכל שורה
+        for (let r = 0; r < SIZE; r++) {
+            const howMany = getHowManySelectedPerRow();
+            const picked = new Set();
+            while (picked.size < howMany) {
+                picked.add(Math.floor(Math.random() * SIZE));
+            }
+            picked.forEach(c => solutionMask[r][c] = true);
+        }
+
+        // לוודא שלכל עמודה יש לפחות תא פתרון
+        for (let c = 0; c < SIZE; c++) {
+            let exists = false;
+            for (let r = 0; r < SIZE; r++) {
+                if (solutionMask[r][c]) {
+                    exists = true;
+                    break;
+                }
+            }
+            if (!exists) {
+                const rr = Math.floor(Math.random() * SIZE);
+                solutionMask[rr][c] = true;
+            }
+        }
+
+        // מילוי מספרים
+        for (let r = 0; r < SIZE; r++) {
+            for (let c = 0; c < SIZE; c++) {
+                gridValues[r][c] = getRandomCellValue();
+            }
+        }
+
+        // חישוב סכומי יעד
+        for (let r = 0; r < SIZE; r++) {
+            for (let c = 0; c < SIZE; c++) {
+                if (solutionMask[r][c]) {
+                    rowTargets[r] += gridValues[r][c];
+                    colTargets[c] += gridValues[r][c];
                 }
             }
         }
-        return g;
-    }
 
-    function checkWin(){
-        const g = currentGridFromUI();
-        for(let r=0;r<SIZE;r++){
-            for(let c=0;c<SIZE;c++){
-                if(g[r][c] !== solution[r][c]) return false;
-            }
+        // בדיקה שאין שורות/עמודות עם 0
+        for (let r = 0; r < SIZE; r++) {
+            if (rowTargets[r] === 0) return generateNewPuzzle();
         }
-        status.textContent = "✅ Solved!";
-        stopTimer();
-        return true;
-    }
+        for (let c = 0; c < SIZE; c++) {
+            if (colTargets[c] === 0) return generateNewPuzzle();
+        }
 
-    function newGame(){
-        const diff = diffSelect.value;
-        solution = generateSolution();
-        puzzle = makePuzzleFromSolution(solution, diff);
-        renderBoard();
-        status.textContent = `Difficulty: ${diff}`;
-        resetTimer();
+        refreshBoardDisplay();
+        resetBoardStates();
+        updateSumsAndStatus();
         startTimer();
     }
 
-    function clearInputs(){
-        const table = boardHolder.querySelector("table");
-        if(!table) return;
-        for(let r=0;r<SIZE;r++){
-            for(let c=0;c<SIZE;c++){
-                const td = table.rows[r].cells[c];
-                const inp = td.querySelector("input");
-                if(inp) inp.value = "";
-            }
-        }
-        status.textContent = "Cleared.";
+    function refreshBoardDisplay() {
+        document.querySelectorAll(".cell").forEach(cell => {
+            const r = cell.dataset.row;
+            const c = cell.dataset.col;
+            cell.textContent = gridValues[r][c];
+        });
+
+        document.querySelectorAll(".row-sum").forEach(td => {
+            td.textContent = rowTargets[td.dataset.row];
+            td.classList.remove("ok", "bad", "partial");
+        });
+
+        document.querySelectorAll(".col-sum").forEach(td => {
+            td.textContent = colTargets[td.dataset.col];
+            td.classList.remove("ok", "bad", "partial");
+        });
     }
 
-    btnNew.addEventListener("click", newGame);
-    btnClear.addEventListener("click", clearInputs);
+    function resetBoardStates() {
+        document.querySelectorAll(".cell").forEach(cell => {
+            cell.dataset.state = "0";
+            cell.classList.remove("selected", "excluded");
+        });
 
-    // init
-    newGame();
+        const tbl = document.querySelector("table");
+        if (tbl) tbl.style.borderColor = "#444";
+    }
+
+    /* === לחיצה על תא: לבן → אפור → ירוק → לבן === */
+    function onCellClick(event) {
+        const cell = event.currentTarget;
+        let state = Number(cell.dataset.state);
+        state = (state + 1) % 3;
+        cell.dataset.state = state;
+
+        cell.classList.remove("selected", "excluded");
+        if (state === 1) {
+            cell.classList.add("excluded");
+        } else if (state === 2) {
+            cell.classList.add("selected");
+        }
+
+        updateSumsAndStatus();
+    }
+
+    /* === חישוב סטטוס שורות/עמודות וסיום === */
+    function updateSumsAndStatus() {
+        const sumGreenRow = new Array(SIZE).fill(0);
+        const sumGreenCol = new Array(SIZE).fill(0);
+        const sumWhiteRow = new Array(SIZE).fill(0);
+        const sumWhiteCol = new Array(SIZE).fill(0);
+        const countWhiteRow = new Array(SIZE).fill(0);
+        const countWhiteCol = new Array(SIZE).fill(0);
+
+        document.querySelectorAll(".cell").forEach(cell => {
+            const r = Number(cell.dataset.row);
+            const c = Number(cell.dataset.col);
+            const val = gridValues[r][c];
+            const state = cell.dataset.state;
+
+            if (state === "2") {
+                sumGreenRow[r] += val;
+                sumGreenCol[c] += val;
+            } else if (state === "0") {
+                sumWhiteRow[r] += val;
+                sumWhiteCol[c] += val;
+                countWhiteRow[r]++;
+                countWhiteCol[c]++;
+            }
+        });
+
+        const rowSolved = new Array(SIZE).fill(false);
+        const colSolved = new Array(SIZE).fill(false);
+
+        document.querySelectorAll(".row-sum").forEach(td => {
+            const r = Number(td.dataset.row);
+            const target = rowTargets[r];
+            const g = sumGreenRow[r];
+            const w = sumWhiteRow[r];
+            const whiteCount = countWhiteRow[r];
+
+            td.classList.remove("ok", "bad", "partial");
+
+            if (g === target && whiteCount === 0) {
+                td.classList.add("ok");
+                rowSolved[r] = true;
+            } else if (g < target && g + w === target && whiteCount > 0) {
+                td.classList.add("partial");
+            } else {
+                td.classList.add("bad");
+            }
+        });
+
+        document.querySelectorAll(".col-sum").forEach(td => {
+            const c = Number(td.dataset.col);
+            const target = colTargets[c];
+            const g = sumGreenCol[c];
+            const w = sumWhiteCol[c];
+            const whiteCount = countWhiteCol[c];
+
+            td.classList.remove("ok", "bad", "partial");
+
+            if (g === target && whiteCount === 0) {
+                td.classList.add("ok");
+                colSolved[c] = true;
+            } else if (g < target && g + w === target && whiteCount > 0) {
+                td.classList.add("partial");
+            } else {
+                td.classList.add("bad");
+            }
+        });
+
+        let solved = true;
+        for (let r = 0; r < SIZE; r++) if (!rowSolved[r]) solved = false;
+        for (let c = 0; c < SIZE; c++) if (!colSolved[c]) solved = false;
+
+        const status = document.getElementById("status");
+        const tbl = document.querySelector("table");
+
+        if (solved) {
+            stopTimer();
+            const mm = Math.floor(elapsedSeconds / 60).toString().padStart(2, "0");
+            const ss = (elapsedSeconds % 60).toString().padStart(2, "0");
+            status.textContent = `Solved in ${mm}:${ss} ✅`;
+            if (tbl) tbl.style.borderColor = "#3dbc40";
+        } else {
+            status.textContent = "";
+            if (tbl) tbl.style.borderColor = "#444";
+        }
+    }
+
+    function resetBoard() {
+        resetBoardStates();
+        updateSumsAndStatus();
+        startTimer();
+    }
+
+    function setDifficulty(mode) {
+        currentDifficulty = mode;
+
+        const lowBtn  = document.getElementById("difficultyLow");
+        const midBtn  = document.getElementById("difficultyMid");
+        const highBtn = document.getElementById("difficultyHigh");
+
+        lowBtn.classList.toggle("active", mode === "low");
+        midBtn.classList.toggle("active", mode === "mid");
+        highBtn.classList.toggle("active", mode === "high");
+
+        generateNewPuzzle();
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        applyResponsiveCellSize();
+        buildHtmlTable();
+
+        // 🔧 חשוב: אחרי שהטבלה נבנתה, לעשות עוד apply כדי שה-HTML החדש יקבל את ה-CSS vars מיד
+        applyResponsiveCellSize();
+
+        generateNewPuzzle();
+
+        document.getElementById("resetBtn").addEventListener("click", resetBoard);
+        document.getElementById("newBoardBtn").addEventListener("click", generateNewPuzzle);
+
+        document.getElementById("difficultyLow").addEventListener("click", () => setDifficulty("low"));
+        document.getElementById("difficultyMid").addEventListener("click", () => setDifficulty("mid"));
+        document.getElementById("difficultyHigh").addEventListener("click", () => setDifficulty("high"));
+    });
+
+    // התאמה מחדש כשמסובבים/משנים גודל מסך
+    window.addEventListener("resize", applyResponsiveCellSize);
+
+    // הרשמת Service Worker עבור PWA
+    if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+            navigator.serviceWorker.register("./service-worker.js")
+                .catch(err => console.log("Service worker registration failed:", err));
+        });
+    }
 </script>
 
 </body>
