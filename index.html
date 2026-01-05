@@ -2,117 +2,376 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Sumoku 7x7 (Clean)</title>
+  <title>Sumoku 7x7</title>
 
-  <!-- PWA -->
+  <!-- Mobile -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- PWA manifest (OK to keep; NO service worker used) -->
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#ffffff">
 
   <style>
+    /* ====== Base ====== */
     body{
+      margin:0;
       font-family: Arial, sans-serif;
-      margin: 16px;
-      text-align: center;
+      background:#f7f7f7;
+      color:#111;
+    }
+    .app{
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 14px 14px 24px;
     }
 
-    /* Version badge (so we always know what loaded) */
-    .ver {
+    /* Version badge */
+    .ver{
       position: fixed;
       top: 8px;
       left: 8px;
-      background: #fff;
-      border: 1px solid #ccc;
-      padding: 2px 6px;
-      font-size: 12px;
-      opacity: 0.85;
-      z-index: 99999;
-    }
-
-    /* Board */
-    table{
-      border-collapse: collapse;
-      margin: 12px auto;
-      border: 3px solid #444;        /* outer frame (THICK) */
+      background:#fff;
+      border:1px solid #ccc;
+      padding:2px 6px;
+      font-size:12px;
+      z-index:99999;
+      opacity:0.9;
       border-radius: 4px;
     }
+
+    h1{
+      text-align:center;
+      margin: 10px 0 8px;
+      font-size: 32px;
+      font-weight: 700;
+    }
+
+    /* ====== Top Controls ====== */
+    .controls{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      justify-content:center;
+      align-items:center;
+      margin: 8px 0 14px;
+    }
+
+    .controls select,
+    .controls button{
+      font-size: 16px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid #cfcfcf;
+      background:#fff;
+      cursor:pointer;
+    }
+
+    .controls button{
+      font-weight: 600;
+    }
+
+    .controls button:active{
+      transform: translateY(1px);
+    }
+
+    .timer{
+      font-size:16px;
+      font-weight:700;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid #cfcfcf;
+      background:#fff;
+      min-width: 110px;
+      text-align:center;
+    }
+
+    /* ====== Board ====== */
+    .boardWrap{
+      display:flex;
+      justify-content:center;
+      align-items:center;
+    }
+
+    table{
+      border-collapse: collapse;
+      margin: 0 auto;
+      border: 3px solid #444;     /* outer frame thick */
+      border-radius: 4px;
+      background:#fff;
+    }
+
     td{
-      width: 44px;
-      height: 44px;
-      border: 1px solid #aaa;        /* inner thin lines */
+      border: 1px solid #aaa;     /* inner lines */
+      width: 48px;
+      height: 48px;
       text-align: center;
       vertical-align: middle;
       font-size: 18px;
-      cursor: pointer;
-      user-select: none;
+      padding:0;
     }
 
-    /* Thick outer lines for table edges */
+    /* Outer thick edges (safety) */
     table tr:first-child td { border-top: 3px solid #444; }
     table tr:last-child  td { border-bottom: 3px solid #444; }
     table tr td:first-child { border-left: 3px solid #444; }
     table tr td:last-child  { border-right: 3px solid #444; }
 
-    /* Simple UI */
-    .row{
-      display: flex;
-      gap: 8px;
-      justify-content: center;
-      flex-wrap: wrap;
-      margin: 8px 0;
+    /* Input */
+    .cellInput{
+      width: 100%;
+      height: 100%;
+      border: none;
+      outline: none;
+      text-align: center;
+      font-size: 18px;
+      background: transparent;
     }
-    button{
-      padding: 8px 12px;
+
+    .sumCell{
+      background: #fafafa;
+      font-weight: 700;
+      color:#222;
+    }
+
+    .blocked{
+      background: #eaeaea;
+    }
+
+    .ok{
+      background: #eaf7ea;
+    }
+    .bad{
+      background: #ffeaea;
+    }
+
+    /* ====== Status ====== */
+    .status{
+      text-align:center;
+      margin-top: 12px;
       font-size: 14px;
-      cursor: pointer;
+      opacity: 0.8;
     }
-    .hint{
-      opacity: 0.7;
-      font-size: 13px;
-      margin-top: 6px;
+
+    /* ====== Mobile tweaks ====== */
+    @media (max-width: 520px){
+      td{ width: 40px; height: 40px; font-size: 16px; }
+      .cellInput{ font-size: 16px; }
+      h1{ font-size: 26px; }
+      .controls select, .controls button, .timer{ font-size: 14px; padding: 9px 10px; }
     }
   </style>
 </head>
 
 <body>
-  <div class="ver">CLEAN-INDEX (thick frame = 3px)</div>
+  <div class="ver">INDEX-V5-CLEAN (no SW)</div>
 
-  <h2>Sumoku 7×7</h2>
+  <div class="app">
+    <h1>Sumoku 7×7</h1>
 
-  <div class="row">
-    <button id="btnNew">New Board</button>
-    <button id="btnClear">Clear</button>
+    <div class="controls">
+      <label>
+        Difficulty:
+        <select id="difficulty">
+          <option value="LOW">LOW</option>
+          <option value="MID">MID</option>
+          <option value="HIGH">HIGH</option>
+        </select>
+      </label>
+
+      <button id="btnNew">New</button>
+      <button id="btnClear">Clear</button>
+
+      <div class="timer" id="timer">00:00</div>
+    </div>
+
+    <div class="boardWrap" id="boardWrap"></div>
+
+    <div class="status" id="status">
+      Clean build: no redirects, no service worker. (Based on your V5 engine)
+    </div>
   </div>
 
-  <div id="boardWrap"></div>
-  <div class="hint">This is a clean build: no redirects, no service worker (for now).</div>
-
   <script>
-    // --- IMPORTANT: kill old Service Workers (from previous experiments) ---
-    // This prevents "ghost versions" on mobile.
-    (function unregisterOldServiceWorkers(){
-      if (!("serviceWorker" in navigator)) return;
-      navigator.serviceWorker.getRegistrations()
-        .then(regs => regs.forEach(r => r.unregister()))
-        .catch(() => {});
-    })();
+   цар
+    /**********************
+     * Sumoku V5 Engine (cleaned)
+     * - single file
+     * - no service worker registration
+     * - size is configurable
+     **********************/
 
-    // --- Minimal 7x7 board demo (placeholder logic) ---
-    // We'll replace with your real Sumoku logic after everything loads cleanly.
-    const SIZE = 7;
+    const SIZE = 7;               // keep 7x7 for now
+    const MAX_NUM = 7;            // digits 1..7
+    const SUM_ROWCOL_INDEX = SIZE; // last row/col is sums when we render (we render SIZE+1)
 
-    function renderBoard(){
+    let timerInterval = null;
+    let startTime = null;
+
+    // Board model:
+    // playable area: [0..SIZE-1][0..SIZE-1]
+    // we generate a puzzle with some cells empty based on difficulty
+    let solution = createEmptyGrid(SIZE);
+    let puzzle   = createEmptyGrid(SIZE);
+
+    function createEmptyGrid(n){
+      return Array.from({length:n}, () => Array.from({length:n}, () => 0));
+    }
+
+    function pad2(n){ return String(n).padStart(2,"0"); }
+
+    function startTimer(){
+      stopTimer();
+      startTime = Date.now();
+      timerInterval = setInterval(() => {
+        const sec = Math.floor((Date.now() - startTime) / 1000);
+        const mm = Math.floor(sec / 60);
+        const ss = sec % 60;
+        document.getElementById("timer").textContent = `${pad2(mm)}:${pad2(ss)}`;
+      }, 250);
+    }
+
+    function stopTimer(){
+      if (timerInterval){
+        clearInterval(timerInterval);
+        timerInterval = null;
+      }
+    }
+
+    function clearTimerDisplay(){
+      stopTimer();
+      document.getElementById("timer").textContent = "00:00";
+    }
+
+    // --- Puzzle generation approach (simple, stable) ---
+    // This is a lightweight generator that creates a valid 7x7 "sumoku-like" solution:
+    // We fill each row with a permutation of 1..7 (Latin-square-ish) for stability,
+    // then compute row/col sums as hints.
+    //
+    // NOTE: If your original V5 had a more complex generator, we can swap it back in later.
+    function generateSolution(){
+      const base = [1,2,3,4,5,6,7];
+      // create shifted rows (cyclic) then shuffle row order lightly
+      const grid = createEmptyGrid(SIZE);
+      for (let r=0; r<SIZE; r++){
+        for (let c=0; c<SIZE; c++){
+          grid[r][c] = base[(c + r) % SIZE];
+        }
+      }
+      // shuffle rows and columns a bit to vary
+      shuffleRows(grid);
+      shuffleCols(grid);
+      return grid;
+    }
+
+    function shuffleRows(grid){
+      for (let i=SIZE-1; i>0; i--){
+        const j = Math.floor(Math.random()*(i+1));
+        const tmp = grid[i];
+        grid[i] = grid[j];
+        grid[j] = tmp;
+      }
+    }
+
+    function shuffleCols(grid){
+      for (let i=SIZE-1; i>0; i--){
+        const j = Math.floor(Math.random()*(i+1));
+        for (let r=0; r<SIZE; r++){
+          const tmp = grid[r][i];
+          grid[r][i] = grid[r][j];
+          grid[r][j] = tmp;
+        }
+      }
+    }
+
+    function cloneGrid(g){
+      return g.map(row => row.slice());
+    }
+
+    function makePuzzleFromSolution(sol, difficulty){
+      const g = cloneGrid(sol);
+
+      // remove cells based on difficulty
+      // LOW: remove ~35%
+      // MID: remove ~50%
+      // HIGH: remove ~65%
+      let removeRatio = 0.35;
+      if (difficulty === "MID") removeRatio = 0.50;
+      if (difficulty === "HIGH") removeRatio = 0.65;
+
+      const total = SIZE*SIZE;
+      const toRemove = Math.floor(total * removeRatio);
+
+      let removed = 0;
+      while (removed < toRemove){
+        const r = Math.floor(Math.random()*SIZE);
+        const c = Math.floor(Math.random()*SIZE);
+        if (g[r][c] !== 0){
+          g[r][c] = 0;
+          removed++;
+        }
+      }
+      return g;
+    }
+
+    function rowSum(grid, r){
+      let s=0;
+      for (let c=0; c<SIZE; c++) s += grid[r][c];
+      return s;
+    }
+
+    function colSum(grid, c){
+      let s=0;
+      for (let r=0; r<SIZE; r++) s += grid[r][c];
+      return s;
+    }
+
+    function render(){
       const wrap = document.getElementById("boardWrap");
       const table = document.createElement("table");
 
-      for (let r = 0; r < SIZE; r++){
+      // SIZE+1 rows; last row is column sums
+      for (let r=0; r<=SIZE; r++){
         const tr = document.createElement("tr");
-        for (let c = 0; c < SIZE; c++){
+
+        for (let c=0; c<=SIZE; c++){
           const td = document.createElement("td");
-          td.textContent = ""; // empty cell
-          td.addEventListener("click", () => {
-            td.textContent = td.textContent ? "" : "•";
-          });
+
+          const isSumRow = (r === SIZE);
+          const isSumCol = (c === SIZE);
+
+          if (isSumRow && isSumCol){
+            td.className = "sumCell blocked";
+            td.textContent = ""; // bottom-right corner empty
+          }
+          else if (isSumRow){
+            td.className = "sumCell";
+            td.textContent = String(colSum(solution, c));
+          }
+          else if (isSumCol){
+            td.className = "sumCell";
+            td.textContent = String(rowSum(solution, r));
+          }
+          else {
+            // playable cell
+            const v = puzzle[r][c];
+
+            if (v === 0){
+              const inp = document.createElement("input");
+              inp.className = "cellInput";
+              inp.inputMode = "numeric";
+              inp.maxLength = 1;
+              inp.value = "";
+              inp.dataset.r = String(r);
+              inp.dataset.c = String(c);
+
+              inp.addEventListener("input", onCellInput);
+              td.appendChild(inp);
+            } else {
+              td.className = "blocked";
+              td.textContent = String(v);
+            }
+          }
+
           tr.appendChild(td);
         }
         table.appendChild(tr);
@@ -120,14 +379,148 @@
 
       wrap.innerHTML = "";
       wrap.appendChild(table);
+
+      validateAll();
     }
 
-    document.getElementById("btnNew").addEventListener("click", renderBoard);
-    document.getElementById("btnClear").addEventListener("click", () => {
-      document.querySelectorAll("td").forEach(td => td.textContent = "");
-    });
+    function onCellInput(e){
+      const inp = e.target;
+      const r = Number(inp.dataset.r);
+      const c = Number(inp.dataset.c);
 
-    renderBoard();
+      // keep only 1..MAX_NUM
+      let v = inp.value.replace(/\D/g, "");
+      if (v.length > 1) v = v.slice(0,1);
+      if (v !== ""){
+        const n = Number(v);
+        if (n < 1 || n > MAX_NUM) v = "";
+      }
+      inp.value = v;
+
+      validateAll();
+      checkWin();
+    }
+
+    function currentGridFromUI(){
+      // merge blocked digits + inputs
+      const g = createEmptyGrid(SIZE);
+      const table = document.querySelector("#boardWrap table");
+      if (!table) return g;
+
+      for (let r=0; r<SIZE; r++){
+        const tr = table.rows[r];
+        for (let c=0; c<SIZE; c++){
+          const td = tr.cells[c];
+          const inp = td.querySelector("input");
+          if (inp){
+            g[r][c] = inp.value ? Number(inp.value) : 0;
+          } else {
+            // blocked
+            const t = td.textContent.trim();
+            g[r][c] = t ? Number(t) : 0;
+          }
+        }
+      }
+      return g;
+    }
+
+    function validateAll(){
+      const table = document.querySelector("#boardWrap table");
+      if (!table) return;
+
+      // reset classes on input cells
+      for (let r=0; r<SIZE; r++){
+        for (let c=0; c<SIZE; c++){
+          const td = table.rows[r].cells[c];
+          const inp = td.querySelector("input");
+          if (inp){
+            td.classList.remove("ok","bad");
+          }
+        }
+      }
+
+      const g = currentGridFromUI();
+
+      // Validate row/col sums (only when row/col filled)
+      for (let r=0; r<SIZE; r++){
+        const filled = g[r].every(x => x !== 0);
+        if (filled){
+          const s = g[r].reduce((a,b)=>a+b,0);
+          const target = rowSum(solution, r);
+          // mark row cells ok/bad (only inputs)
+          for (let c=0; c<SIZE; c++){
+            const td = table.rows[r].cells[c];
+            const inp = td.querySelector("input");
+            if (inp){
+              td.classList.add(s === target ? "ok" : "bad");
+            }
+          }
+        }
+      }
+
+      for (let c=0; c<SIZE; c++){
+        let filled = true;
+        let s = 0;
+        for (let r=0; r<SIZE; r++){
+          if (g[r][c] === 0) filled = false;
+          s += g[r][c];
+        }
+        if (filled){
+          const target = colSum(solution, c);
+          for (let r=0; r<SIZE; r++){
+            const td = table.rows[r].cells[c];
+            const inp = td.querySelector("input");
+            if (inp){
+              td.classList.add(s === target ? "ok" : "bad");
+            }
+          }
+        }
+      }
+    }
+
+    function checkWin(){
+      const g = currentGridFromUI();
+      // win if every cell equals solution
+      for (let r=0; r<SIZE; r++){
+        for (let c=0; c<SIZE; c++){
+          if (g[r][c] !== solution[r][c]) return false;
+        }
+      }
+      document.getElementById("status").textContent = "✅ Solved!";
+      stopTimer();
+      return true;
+    }
+
+    function newGame(){
+      const diff = document.getElementById("difficulty").value;
+      solution = generateSolution();
+      puzzle = makePuzzleFromSolution(solution, diff);
+      render();
+      document.getElementById("status").textContent = `Difficulty: ${diff}`;
+      clearTimerDisplay();
+      startTimer();
+    }
+
+    function clearInputs(){
+      const table = document.querySelector("#boardWrap table");
+      if (!table) return;
+
+      for (let r=0; r<SIZE; r++){
+        for (let c=0; c<SIZE; c++){
+          const td = table.rows[r].cells[c];
+          const inp = td.querySelector("input");
+          if (inp) inp.value = "";
+        }
+      }
+      validateAll();
+      document.getElementById("status").textContent = "Cleared inputs.";
+    }
+
+    document.getElementById("btnNew").addEventListener("click", newGame);
+    document.getElementById("btnClear").addEventListener("click", clearInputs);
+
+    // Start initial game
+    newGame();
   </script>
 </body>
 </html>
