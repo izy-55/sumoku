@@ -1,142 +1,130 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8">
   <title>Sumoku</title>
 
+  <!-- Mobile / PWA -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#ffffff">
+  <link rel="manifest" href="./manifest.json">
+
   <style>
-    :root{
-      --cell: 52px;
-      --outer: 3px;
-      --inner: 1px;
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #fff;
+      text-align: center;
     }
 
-    body{
-      margin:0;
-      font-family:Arial, sans-serif;
-      min-height:100vh;
-      display:flex;
-      justify-content:center;
-      background:#fff;
+    .container {
+      max-width: 360px;
+      margin: 0 auto;
+      padding: 20px 10px;
     }
 
-    .wrap{
-      width:100%;
-      max-width:900px;
-      padding:18px 16px 28px;
-      text-align:center;
+    .title {
+      font-size: 28px;
+      font-weight: bold;
+      margin: 20px 0;
     }
 
-    .card{
-      display:block;
-      width:fit-content;
-      margin:0 auto;
-      text-decoration:none;
-      color:#000;
+    .cards {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      margin-top: 30px;
     }
 
-    .stage{
-      position:relative;
-      display:block;
-      width:fit-content;
-      margin:0 auto;
-      border:var(--outer) solid #000;
-      background:#fff;
+    .card {
+      text-decoration: none;
+      color: black;
+      display: block;
     }
 
-    .grid{
-      display:grid;
+    .stage {
+      position: relative;
+      margin: 0 auto;
+      width: 180px;
+      height: 180px;
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      border: 2px solid black;
     }
 
-    .stage.five .grid{
-      grid-template-columns:repeat(5, var(--cell));
+    .stage.seven {
+      grid-template-columns: repeat(7, 1fr);
+      width: 210px;
+      height: 210px;
     }
 
-    .stage.seven .grid{
-      grid-template-columns:repeat(7, var(--cell));
+    .cell {
+      background: #9be59b;
+    }
+    .cell.alt {
+      background: yellow;
     }
 
-    .cell{
-      width:var(--cell);
-      height:var(--cell);
-      border:var(--inner) solid #000;
-      box-sizing:border-box;
+    .overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 40px;
+      font-weight: bold;
+      color: black;
+      text-shadow: 2px 2px 0 #3a3a3a;
     }
 
-    .y{ background:#ff0; }
-    .g{ background:#83e28e; }
-
-    .overlay{
-      position:absolute;
-      inset:0;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-size:78px;
-      font-weight:900;
-      letter-spacing:2px;
-      pointer-events:none;
-      text-shadow:3px 3px 0 #0006;
-    }
-
-    /* SUMOKU האמצעי – קטן ועדין */
-    .mid{
-      margin:18px auto;
-      display:block;
-      width:fit-content;
-      font-size:40px;          /* מוקטן */
-      font-weight:900;
-      letter-spacing:4px;
-      padding:0;               /* בלי "קופסה" */
-      border:none;             /* בלי מסגרת */
-      background:none;
-    }
-
-    @media (max-width: 380px){
-      :root{ --cell: 30px; }
-      .overlay{ font-size:38px; }
-      .mid{ font-size:26px; letter-spacing:3px; }
+    @media (max-width: 420px) {
+      .stage { width: 150px; height: 150px; }
+      .stage.seven { width: 180px; height: 180px; }
+      .overlay { font-size: 32px; }
     }
   </style>
 </head>
 
 <body>
-  <div class="wrap">
+  <div class="container">
 
-    <!-- 5x5 -->
-    <a class="card" href="./game-5x5.html" aria-label="Play 5x5">
-      <div class="stage five">
-        <div class="grid">
-          <div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div>
-          <div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div>
-          <div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div>
-          <div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div>
-          <div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div>
+    <div class="title">SUMOKU</div>
+
+    <div class="cards">
+
+      <!-- 5x5 -->
+      <a class="card" href="./game-5x5.html" aria-label="Play 5x5">
+        <div class="stage">
+          <!-- 25 cells -->
+          <script>
+            for (let i = 0; i < 25; i++) {
+              document.write(`<div class="cell ${i % 2 ? 'alt' : ''}"></div>`);
+            }
+          </script>
+          <div class="overlay">5×5</div>
         </div>
-        <div class="overlay">5×5</div>
-      </div>
-    </a>
+      </a>
 
-    <!-- SUMOKU באמצע -->
-    <div class="mid">SUMOKU</div>
-
-    <!-- 7x7 -->
-    <a class="card" href="./game-7x7.html" aria-label="Play 7x7">
-      <div class="stage seven">
-        <div class="grid">
-          <div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div>
-          <div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div>
-          <div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div>
-          <div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div>
-          <div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div>
-          <div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div>
-          <div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div>
+      <!-- 7x7 -->
+      <a class="card" href="./game-7x7.html" aria-label="Play 7x7">
+        <div class="stage seven">
+          <!-- 49 cells -->
+          <script>
+            for (let i = 0; i < 49; i++) {
+              document.write(`<div class="cell ${i % 2 ? 'alt' : ''}"></div>`);
+            }
+          </script>
+          <div class="overlay">7×7</div>
         </div>
-        <div class="overlay">7×7</div>
-      </div>
-    </a>
+      </a>
 
+    </div>
   </div>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js');
+    }
+  </script>
 </body>
 </html>
