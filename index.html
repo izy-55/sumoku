@@ -1,78 +1,113 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Sumoku</title>
 
   <style>
-    body{font-family:Arial,sans-serif;margin:0;display:flex;justify-content:center}
-    .wrap{max-width:520px;width:100%;padding:24px 18px;text-align:center}
-    h1{margin:10px 0 18px;font-size:48px;letter-spacing:2px}
-    .card{display:block;text-decoration:none;color:inherit;margin:18px auto}
-    .board{
+    body{
+      margin:0;
+      font-family:Arial, sans-serif;
+      display:flex;
+      justify-content:center;
+      align-items:flex-start;
+      min-height:100vh;
+      background:#fff;
+    }
+
+    .wrap{
       width:100%;
-      border:3px solid #000;
-      display:grid;
-      gap:0;
-      box-sizing:border-box;
-      background:#0000;
+      max-width:520px;
+      padding:24px 16px;
+      text-align:center;
     }
-    .cell{aspect-ratio:1/1;border:1px solid #000}
-    .y{background:#ff0}
-    .g{background:#83e28e}
-    .label{
-      margin:14px auto 0;
-      font-size:64px;
-      font-weight:800;
-      text-shadow: 3px 3px 0 #0006;
-    }
-    .mid{
-      margin:18px 0;
-      padding:18px 0;
-      background:#f7c6d8;
-      border:2px solid #000;
-      font-size:52px;
-      font-weight:900;
+
+    h1{
+      margin:12px 0 28px;
+      font-size:48px;
       letter-spacing:3px;
     }
-    .hint{margin-top:10px;color:#444;font-size:14px}
+
+    .card{
+      display:block;
+      text-decoration:none;
+      color:#000;
+      margin:24px auto;
+    }
+
+    .board{
+      width:100%;
+      aspect-ratio:1 / 1;
+      border:3px solid #000;
+      display:grid;
+    }
+
+    .board.five{ grid-template-columns:repeat(5,1fr); }
+    .board.seven{ grid-template-columns:repeat(7,1fr); }
+
+    .cell{
+      border:1px solid #000;
+    }
+
+    .y{ background:#ff0; }
+    .g{ background:#83e28e; }
+
+    .label{
+      margin-top:14px;
+      font-size:56px;
+      font-weight:800;
+      letter-spacing:2px;
+    }
+
+    .hint{
+      margin-top:18px;
+      font-size:14px;
+      color:#444;
+    }
   </style>
 </head>
 
 <body>
   <div class="wrap">
+
+    <h1>SUMOKU</h1>
+
     <a class="card" href="./game-5x5.html" aria-label="Play 5x5">
-      <div class="board" style="grid-template-columns:repeat(5,1fr)">
-        <!-- 5x5 checker -->
-        <script>
-          for(let i=0;i<25;i++){
-            const d=document.createElement('div');
-            d.className='cell '+(((Math.floor(i/5)+i)%2===0)?'y':'g');
-            document.currentScript.parentElement.appendChild(d);
-          }
-        </script>
+      <div class="board five">
+        <!-- 25 cells -->
+        <div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div>
+        <div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div>
+        <div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div>
+        <div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div>
+        <div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div>
       </div>
       <div class="label">5×5</div>
     </a>
 
-    <div class="mid">SUMOKU</div>
-
     <a class="card" href="./game-7x7.html" aria-label="Play 7x7">
-      <div class="board" style="grid-template-columns:repeat(7,1fr)">
-        <!-- 7x7 checker -->
-        <script>
-          for(let i=0;i<49;i++){
-            const d=document.createElement('div');
-            d.className='cell '+(((Math.floor(i/7)+i)%2===0)?'y':'g');
-            document.currentScript.parentElement.appendChild(d);
-          }
-        </script>
+      <div class="board seven">
+        <!-- 49 cells -->
+        <!-- שורה 1 -->
+        <div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div>
+        <!-- שורה 2 -->
+        <div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div>
+        <!-- שורה 3 -->
+        <div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div>
+        <!-- שורה 4 -->
+        <div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div>
+        <!-- שורה 5 -->
+        <div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div>
+        <!-- שורה 6 -->
+        <div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div>
+        <!-- שורה 7 -->
+        <div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div>
       </div>
       <div class="label">7×7</div>
     </a>
 
-    <div class="hint">Choose a board size to start.</div>
+    <div class="hint">Choose a board size to start</div>
+
   </div>
 </body>
 </html>
