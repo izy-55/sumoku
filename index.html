@@ -7,7 +7,7 @@
 
   <style>
     :root{
-      --cell: 72px;      /* גודל משבצת בדסקטופ */
+      --cell: 72px;     /* גודל משבצת דסקטופ */
       --outer: 3px;
       --inner: 1px;
       --gap: 26px;
@@ -19,7 +19,6 @@
       min-height:100vh;
       display:flex;
       justify-content:center;
-      align-items:flex-start;
       background:#fff;
     }
 
@@ -30,34 +29,31 @@
       text-align:center;
     }
 
-    h1{
-      margin:10px 0 14px;
+    .title{
+      margin:6px 0 18px;
       font-size:52px;
       letter-spacing:3px;
+      font-weight:900;
     }
 
-    /* הכרטיס עצמו מתכווץ/מתרחב לפי הלוח (במקום 100% רוחב) */
     .card{
       display:inline-block;
       text-decoration:none;
       color:#000;
-      margin:14px auto 0;
-    }
-
-    .board{
-      border:var(--outer) solid #000;
-      display:grid;
-      box-sizing:border-box;
-      background:#fff;
       margin:0 auto;
     }
 
-    .board.five{
-      grid-template-columns:repeat(5, var(--cell));
+    /* "לוח" עם שכבת טקסט מעליו */
+    .stage{
+      position:relative;
+      display:inline-block;   /* מתכווץ לרוחב הלוח */
+      border:var(--outer) solid #000;
+      background:#fff;
     }
-    .board.seven{
-      grid-template-columns:repeat(7, var(--cell));
-    }
+
+    .grid{ display:grid; }
+    .stage.five .grid{ grid-template-columns:repeat(5, var(--cell)); }
+    .stage.seven .grid{ grid-template-columns:repeat(7, var(--cell)); }
 
     .cell{
       width:var(--cell);
@@ -65,27 +61,42 @@
       border:var(--inner) solid #000;
       box-sizing:border-box;
     }
-
     .y{ background:#ff0; }
     .g{ background:#83e28e; }
 
-    /* טקסט ממורכז בדיוק ביחס לרוחב הכרטיס (שהוא רוחב הלוח) */
-    .label{
-      margin:12px 0 0;
-      font-size:56px;
+    /* Overlay טקסט */
+    .overlay{
+      position:absolute;
+      inset:0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:78px;
       font-weight:900;
       letter-spacing:2px;
-      text-align:center;
-      text-shadow: 3px 3px 0 #0006;
+      pointer-events:none; /* שלא יפריע ללחיצה על הקישור */
+      text-shadow: 3px 3px 0 #0006; /* אפשר למחוק אם לא רוצים צל */
+    }
+
+    /* פס אמצעי "SUMOKU" */
+    .mid{
+      margin:18px auto;
+      display:inline-block;
+      padding:14px 42px;
+      border:2px solid #000;
+      font-size:56px;
+      font-weight:900;
+      letter-spacing:3px;
+      background:transparent; /* אפשר לשנות ל-#f7c6d8 אם תרצה ורוד */
     }
 
     .spacer{ height: var(--gap); }
 
-    /* מובייל: משבצות קטנות יותר */
     @media (max-width: 560px){
       :root{ --cell: 46px; }
-      h1{ font-size:40px; margin-bottom:10px; }
-      .label{ font-size:44px; }
+      .title{ font-size:40px; margin-bottom:12px; }
+      .overlay{ font-size:56px; }
+      .mid{ font-size:44px; padding:12px 28px; }
       .spacer{ height: 18px; }
     }
   </style>
@@ -93,35 +104,42 @@
 
 <body>
   <div class="wrap">
-    <h1>SUMOKU</h1>
+
+    <div class="title">SUMOKU</div>
 
     <a class="card" href="./game-5x5.html" aria-label="Play 5x5">
-      <div class="board five">
-        <!-- 25 cells -->
-        <div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div>
-        <div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div>
-        <div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div>
-        <div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div>
-        <div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div>
+      <div class="stage five">
+        <div class="grid">
+          <!-- 25 cells -->
+          <div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div>
+          <div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div>
+          <div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div>
+          <div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div>
+          <div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div>
+        </div>
+        <div class="overlay">5×5</div>
       </div>
-      <div class="label">5×5</div>
+    </a>
+
+    <div class="mid">SUMOKU</div>
+
+    <a class="card" href="./game-7x7.html" aria-label="Play 7x7">
+      <div class="stage seven">
+        <div class="grid">
+          <!-- 49 cells -->
+          <div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div>
+          <div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div>
+          <div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div>
+          <div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div>
+          <div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div>
+          <div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div>
+          <div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div>
+        </div>
+        <div class="overlay">7×7</div>
+      </div>
     </a>
 
     <div class="spacer"></div>
-
-    <a class="card" href="./game-7x7.html" aria-label="Play 7x7">
-      <div class="board seven">
-        <!-- 49 cells -->
-        <div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div>
-        <div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div>
-        <div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div>
-        <div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div>
-        <div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div>
-        <div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div>
-        <div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div>
-      </div>
-      <div class="label">7×7</div>
-    </a>
 
   </div>
 </body>
