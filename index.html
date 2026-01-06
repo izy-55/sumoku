@@ -7,7 +7,7 @@
 
   <style>
     :root{
-      --cell: 72px;     /* גודל משבצת בדסקטופ */
+      --cell: 72px;
       --outer: 3px;
       --inner: 1px;
     }
@@ -28,14 +28,6 @@
       text-align:center;
     }
 
-    .title{
-      font-size:56px;
-      font-weight:900;
-      letter-spacing:3px;
-      margin:10px 0 20px;
-    }
-
-    /* כל כרטיס בשורה נפרדת */
     .card{
       display:block;
       width:fit-content;
@@ -44,7 +36,6 @@
       color:#000;
     }
 
-    /* לוח עם Overlay */
     .stage{
       position:relative;
       display:block;
@@ -76,7 +67,6 @@
     .y{ background:#ff0; }
     .g{ background:#83e28e; }
 
-    /* טקסט מעל הלוח */
     .overlay{
       position:absolute;
       inset:0;
@@ -90,7 +80,6 @@
       text-shadow:3px 3px 0 #0006;
     }
 
-    /* כותרת אמצעית */
     .mid{
       margin:22px auto;
       display:block;
@@ -100,13 +89,11 @@
       font-size:56px;
       font-weight:900;
       letter-spacing:3px;
-      background:transparent; /* אפשר לצבוע אם רוצים */
+      background:transparent;
     }
 
-    /* מובייל */
     @media (max-width: 560px){
       :root{ --cell: 46px; }
-      .title{ font-size:42px; margin-bottom:14px; }
       .overlay{ font-size:56px; }
       .mid{ font-size:44px; padding:12px 28px; }
     }
@@ -115,8 +102,6 @@
 
 <body>
   <div class="wrap">
-
-    <div class="title">SUMOKU</div>
 
     <!-- 5x5 -->
     <a class="card" href="./game-5x5.html" aria-label="Play 5x5">
