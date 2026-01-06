@@ -7,10 +7,9 @@
 
   <style>
     :root{
-      --cell: 72px;     /* גודל משבצת דסקטופ */
+      --cell: 72px;     /* גודל משבצת בדסקטופ */
       --outer: 3px;
       --inner: 1px;
-      --gap: 26px;
     }
 
     body{
@@ -25,35 +24,47 @@
     .wrap{
       width:100%;
       max-width:900px;
-      padding:18px 16px 28px;
+      padding:20px 16px 30px;
       text-align:center;
     }
 
     .title{
-      margin:6px 0 18px;
-      font-size:52px;
-      letter-spacing:3px;
+      font-size:56px;
       font-weight:900;
+      letter-spacing:3px;
+      margin:10px 0 20px;
     }
 
+    /* כל כרטיס בשורה נפרדת */
     .card{
-      display:inline-block;
+      display:block;
+      width:fit-content;
+      margin:0 auto;
       text-decoration:none;
       color:#000;
-      margin:0 auto;
     }
 
-    /* "לוח" עם שכבת טקסט מעליו */
+    /* לוח עם Overlay */
     .stage{
       position:relative;
-      display:inline-block;   /* מתכווץ לרוחב הלוח */
+      display:block;
+      width:fit-content;
+      margin:0 auto;
       border:var(--outer) solid #000;
       background:#fff;
     }
 
-    .grid{ display:grid; }
-    .stage.five .grid{ grid-template-columns:repeat(5, var(--cell)); }
-    .stage.seven .grid{ grid-template-columns:repeat(7, var(--cell)); }
+    .grid{
+      display:grid;
+    }
+
+    .stage.five .grid{
+      grid-template-columns:repeat(5, var(--cell));
+    }
+
+    .stage.seven .grid{
+      grid-template-columns:repeat(7, var(--cell));
+    }
 
     .cell{
       width:var(--cell);
@@ -61,43 +72,43 @@
       border:var(--inner) solid #000;
       box-sizing:border-box;
     }
+
     .y{ background:#ff0; }
     .g{ background:#83e28e; }
 
-    /* Overlay טקסט */
+    /* טקסט מעל הלוח */
     .overlay{
       position:absolute;
       inset:0;
       display:flex;
       align-items:center;
       justify-content:center;
-      font-size:78px;
+      font-size:80px;
       font-weight:900;
       letter-spacing:2px;
-      pointer-events:none; /* שלא יפריע ללחיצה על הקישור */
-      text-shadow: 3px 3px 0 #0006; /* אפשר למחוק אם לא רוצים צל */
+      pointer-events:none;
+      text-shadow:3px 3px 0 #0006;
     }
 
-    /* פס אמצעי "SUMOKU" */
+    /* כותרת אמצעית */
     .mid{
-      margin:18px auto;
-      display:inline-block;
-      padding:14px 42px;
+      margin:22px auto;
+      display:block;
+      width:fit-content;
+      padding:14px 44px;
       border:2px solid #000;
       font-size:56px;
       font-weight:900;
       letter-spacing:3px;
-      background:transparent; /* אפשר לשנות ל-#f7c6d8 אם תרצה ורוד */
+      background:transparent; /* אפשר לצבוע אם רוצים */
     }
 
-    .spacer{ height: var(--gap); }
-
+    /* מובייל */
     @media (max-width: 560px){
       :root{ --cell: 46px; }
-      .title{ font-size:40px; margin-bottom:12px; }
+      .title{ font-size:42px; margin-bottom:14px; }
       .overlay{ font-size:56px; }
       .mid{ font-size:44px; padding:12px 28px; }
-      .spacer{ height: 18px; }
     }
   </style>
 </head>
@@ -107,10 +118,10 @@
 
     <div class="title">SUMOKU</div>
 
+    <!-- 5x5 -->
     <a class="card" href="./game-5x5.html" aria-label="Play 5x5">
       <div class="stage five">
         <div class="grid">
-          <!-- 25 cells -->
           <div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div>
           <div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div>
           <div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div>
@@ -121,12 +132,13 @@
       </div>
     </a>
 
+    <!-- SUMOKU באמצע -->
     <div class="mid">SUMOKU</div>
 
+    <!-- 7x7 -->
     <a class="card" href="./game-7x7.html" aria-label="Play 7x7">
       <div class="stage seven">
         <div class="grid">
-          <!-- 49 cells -->
           <div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div>
           <div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div>
           <div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div>
@@ -138,8 +150,6 @@
         <div class="overlay">7×7</div>
       </div>
     </a>
-
-    <div class="spacer"></div>
 
   </div>
 </body>
