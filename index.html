@@ -6,71 +6,93 @@
   <title>Sumoku</title>
 
   <style>
+    :root{
+      --cell: 72px;      /* גודל משבצת בדסקטופ */
+      --outer: 3px;
+      --inner: 1px;
+      --gap: 26px;
+    }
+
     body{
       margin:0;
       font-family:Arial, sans-serif;
+      min-height:100vh;
       display:flex;
       justify-content:center;
       align-items:flex-start;
-      min-height:100vh;
       background:#fff;
     }
 
     .wrap{
       width:100%;
-      max-width:520px;
-      padding:24px 16px;
+      max-width:900px;
+      padding:18px 16px 28px;
       text-align:center;
     }
 
     h1{
-      margin:12px 0 28px;
-      font-size:48px;
+      margin:10px 0 14px;
+      font-size:52px;
       letter-spacing:3px;
     }
 
+    /* הכרטיס עצמו מתכווץ/מתרחב לפי הלוח (במקום 100% רוחב) */
     .card{
-      display:block;
+      display:inline-block;
       text-decoration:none;
       color:#000;
-      margin:24px auto;
+      margin:14px auto 0;
     }
 
     .board{
-      width:100%;
-      aspect-ratio:1 / 1;
-      border:3px solid #000;
+      border:var(--outer) solid #000;
       display:grid;
+      box-sizing:border-box;
+      background:#fff;
+      margin:0 auto;
     }
 
-    .board.five{ grid-template-columns:repeat(5,1fr); }
-    .board.seven{ grid-template-columns:repeat(7,1fr); }
+    .board.five{
+      grid-template-columns:repeat(5, var(--cell));
+    }
+    .board.seven{
+      grid-template-columns:repeat(7, var(--cell));
+    }
 
     .cell{
-      border:1px solid #000;
+      width:var(--cell);
+      height:var(--cell);
+      border:var(--inner) solid #000;
+      box-sizing:border-box;
     }
 
     .y{ background:#ff0; }
     .g{ background:#83e28e; }
 
+    /* טקסט ממורכז בדיוק ביחס לרוחב הכרטיס (שהוא רוחב הלוח) */
     .label{
-      margin-top:14px;
+      margin:12px 0 0;
       font-size:56px;
-      font-weight:800;
+      font-weight:900;
       letter-spacing:2px;
+      text-align:center;
+      text-shadow: 3px 3px 0 #0006;
     }
 
-    .hint{
-      margin-top:18px;
-      font-size:14px;
-      color:#444;
+    .spacer{ height: var(--gap); }
+
+    /* מובייל: משבצות קטנות יותר */
+    @media (max-width: 560px){
+      :root{ --cell: 46px; }
+      h1{ font-size:40px; margin-bottom:10px; }
+      .label{ font-size:44px; }
+      .spacer{ height: 18px; }
     }
   </style>
 </head>
 
 <body>
   <div class="wrap">
-
     <h1>SUMOKU</h1>
 
     <a class="card" href="./game-5x5.html" aria-label="Play 5x5">
@@ -85,28 +107,21 @@
       <div class="label">5×5</div>
     </a>
 
+    <div class="spacer"></div>
+
     <a class="card" href="./game-7x7.html" aria-label="Play 7x7">
       <div class="board seven">
         <!-- 49 cells -->
-        <!-- שורה 1 -->
         <div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div>
-        <!-- שורה 2 -->
         <div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div>
-        <!-- שורה 3 -->
         <div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div>
-        <!-- שורה 4 -->
         <div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div>
-        <!-- שורה 5 -->
         <div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div>
-        <!-- שורה 6 -->
         <div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div>
-        <!-- שורה 7 -->
         <div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div><div class="cell g"></div><div class="cell y"></div>
       </div>
       <div class="label">7×7</div>
     </a>
-
-    <div class="hint">Choose a board size to start</div>
 
   </div>
 </body>
