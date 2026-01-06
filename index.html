@@ -24,7 +24,7 @@
     .wrap{
       width:100%;
       max-width:900px;
-      padding:20px 16px 30px;
+      padding:18px 16px 28px;
       text-align:center;
     }
 
@@ -73,29 +73,30 @@
       display:flex;
       align-items:center;
       justify-content:center;
-      font-size:80px;
+      font-size:78px;
       font-weight:900;
       letter-spacing:2px;
       pointer-events:none;
       text-shadow:3px 3px 0 #0006;
     }
 
+    /* SUMOKU האמצעי – קטן ועדין */
     .mid{
-      margin:22px auto;
+      margin:18px auto;
       display:block;
       width:fit-content;
-      padding:14px 44px;
-      border:2px solid #000;
-      font-size:56px;
+      font-size:40px;          /* מוקטן */
       font-weight:900;
-      letter-spacing:3px;
-      background:transparent;
+      letter-spacing:4px;
+      padding:0;               /* בלי "קופסה" */
+      border:none;             /* בלי מסגרת */
+      background:none;
     }
 
     @media (max-width: 560px){
       :root{ --cell: 46px; }
       .overlay{ font-size:56px; }
-      .mid{ font-size:44px; padding:12px 28px; }
+      .mid{ font-size:32px; letter-spacing:3px; }
     }
   </style>
 </head>
