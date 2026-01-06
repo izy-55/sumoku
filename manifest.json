@@ -1,13 +1,21 @@
 {
-  "name": "Sumoku 7x7",
+  "name": "Sumoku",
   "short_name": "Sumoku",
-  "start_url": "./",
-  "scope": "./",
+  "start_url": "/sumoku/index.html",
+  "scope": "/sumoku/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#ffffff",
   "icons": [
-    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" }
+    {
+      "src": "/sumoku/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/sumoku/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
   ]
 }
